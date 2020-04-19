@@ -37,6 +37,7 @@ import static org.meowcat.edxposed.manager.SettingsActivity.getDarkenFactor;
 import static org.meowcat.edxposed.manager.XposedApp.WRITE_EXTERNAL_PERMISSION;
 import static org.meowcat.edxposed.manager.XposedApp.darkenColor;
 import static org.meowcat.edxposed.manager.XposedApp.getPreferences;
+import static org.meowcat.edxposed.manager.adapter.LogsHelper.isMainUser;
 
 public class SettingsFragment extends BasePreferenceFragment implements Preference.OnPreferenceClickListener, SharedPreferences.OnSharedPreferenceChangeListener {
 
@@ -442,6 +443,10 @@ public class SettingsFragment extends BasePreferenceFragment implements Preferen
         });
 
         SwitchPreference prefDisableHiddenAPIBypass = findPreference("disable_hidden_api_bypass");
+        if (!isMainUser(requireContext())) {
+            prefDisableHiddenAPIBypass.setSummary(R.string.settings_summary_disable_hidden_api_bypass_non_primary_user);
+            prefDisableHiddenAPIBypass.setEnabled(false);
+        }
         Objects.requireNonNull(prefDisableHiddenAPIBypass).setChecked(mDisableHiddenAPIBypassFlag.exists());
         prefDisableHiddenAPIBypass.setOnPreferenceChangeListener((preference, newValue) -> {
             boolean enabled = (boolean) newValue;
