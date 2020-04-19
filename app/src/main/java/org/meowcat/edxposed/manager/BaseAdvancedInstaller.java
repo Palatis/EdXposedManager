@@ -7,6 +7,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.Html;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,11 +16,6 @@ import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.core.app.ActivityCompat;
-import androidx.fragment.app.Fragment;
 
 import com.afollestad.materialdialogs.MaterialDialog;
 
@@ -30,9 +26,16 @@ import org.meowcat.edxposed.manager.util.json.XposedZip;
 import java.util.List;
 import java.util.Objects;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.app.ActivityCompat;
+import androidx.fragment.app.Fragment;
+
 import static org.meowcat.edxposed.manager.XposedApp.WRITE_EXTERNAL_PERMISSION;
 
 public class BaseAdvancedInstaller extends Fragment {
+
+    private static final String TAG = "BaseAdvancedInstaller";
 
     private View mClickedButton;
 
@@ -122,48 +125,71 @@ public class BaseAdvancedInstaller extends Fragment {
         }
 
         infoInstaller.setOnClickListener(v -> {
-            final XposedZip selectedInstaller = (XposedZip) chooserInstallers.getSelectedItem();
-            final String s = getString(R.string.infoInstaller,
-                    selectedInstaller.name,
-                    selectedInstaller.version);
+            try {
+                final XposedZip selectedInstaller = (XposedZip) chooserInstallers.getSelectedItem();
+                final String s = getString(R.string.infoInstaller,
+                        selectedInstaller.name,
+                        selectedInstaller.version);
 
-            new MaterialDialog.Builder(requireContext()).title(R.string.info)
-                    .content(s).positiveText(R.string.ok).show();
+                new MaterialDialog.Builder(requireContext()).title(R.string.info)
+                        .content(s).positiveText(R.string.ok).show();
+            } catch (Exception ex) {
+                Log.e(TAG, "No info: " + Log.getStackTraceString(ex));
+            }
         });
         infoUninstaller.setOnClickListener(v -> {
-            final XposedZip selectedUninstaller = (XposedZip) chooserUninstallers.getSelectedItem();
-            final String s = getString(R.string.infoUninstaller,
-                    selectedUninstaller.name,
-                    selectedUninstaller.version);
+            try {
+                final XposedZip selectedUninstaller = (XposedZip) chooserUninstallers.getSelectedItem();
+                final String s = getString(R.string.infoUninstaller,
+                        selectedUninstaller.name,
+                        selectedUninstaller.version);
 
-            new MaterialDialog.Builder(requireContext()).title(R.string.info)
-                    .content(s).positiveText(R.string.ok).show();
+                new MaterialDialog.Builder(requireContext()).title(R.string.info)
+                        .content(s).positiveText(R.string.ok).show();
+            } catch (Exception ex) {
+                Log.e(TAG, "No info: " + Log.getStackTraceString(ex));
+            }
         });
 
         btnInstall.setOnClickListener(v -> {
             mClickedButton = v;
             if (checkPermissions()) return;
 
-            BaseFragment.areYouSure(requireActivity(), getString(R.string.warningArchitecture), (d, w) -> {
-                XposedZip selectedInstaller = (XposedZip) chooserInstallers.getSelectedItem();
-                Uri uri = Uri.parse(selectedInstaller.link);
-                Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-                startActivity(intent);
-            }, (d, w) -> {
-            });
+            BaseFragment.areYouSure(
+                    requireActivity(), getString(R.string.warningArchitecture),
+                    (d, w) -> {
+                        try {
+                            final XposedZip selectedInstaller = (XposedZip) chooserInstallers.getSelectedItem();
+                            final Uri uri = Uri.parse(selectedInstaller.link);
+                            final Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+                            startActivity(intent);
+                        } catch (Exception ex) {
+                            Log.e(TAG, "Cannot download: " + Log.getStackTraceString(ex));
+                        }
+                    },
+                    (d, w) -> {
+                    }
+            );
         });
 
         btnUninstall.setOnClickListener(v -> {
             mClickedButton = v;
             if (checkPermissions()) return;
 
-            BaseFragment.areYouSure(requireActivity(), getString(R.string.warningArchitecture), (d, w) -> {
-                XposedZip selectedUninstaller = (XposedZip) chooserUninstallers.getSelectedItem();
-                Uri uri = Uri.parse(selectedUninstaller.link);
-                Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-                startActivity(intent);
-            }, (d, w) -> {
-            });
+            BaseFragment.areYouSure(
+                    requireActivity(), getString(R.string.warningArchitecture),
+                    (d, w) -> {
+                        try {
+                            XposedZip selectedUninstaller = (XposedZip) chooserUninstallers.getSelectedItem();
+                            Uri uri = Uri.parse(selectedUninstaller.link);
+                            Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+                            startActivity(intent);
+                        } catch (Exception ex) {
+                            Log.e(TAG, "Cannot download: " + Log.getStackTraceString(ex));
+                        }
+                    },
+                    (d, w) -> {
+                    });
         });
 
         notice.setText(Html.fromHtml(notice(), Html.FROM_HTML_MODE_COMPACT));
